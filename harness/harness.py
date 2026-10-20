@@ -23,6 +23,19 @@ TOOLS = [
                 "additionalProperties": False,
             },
         },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_files",
+            "description": "List project directory from root",
+            "parameters": {
+                "type": "object",
+                "properties": {"path": {"type": "string"}},
+                "required": ["path"],
+                "additionalProperties": False,
+            },
+        },
     }
 ]
 
@@ -39,6 +52,15 @@ def project_path(project, path):
     return resolved
 
 
+def list_files(project, path):
+    files = project_path(project, path).iterdir()
+    file_list = []
+    
+    for file in files:
+        file_list.append(file.name)
+    return '\n'.join(file_list)
+
+
 def read_file(project, path):
     return project_path(project, path).read_text(encoding="utf-8")
 
@@ -51,6 +73,10 @@ def execute_tool(project, name, arguments):
             if not isinstance(args, dict) or set(args) != {"path"}:
                 raise ValueError("read_file expects exactly one argument: path")
             return read_file(project, args["path"])
+        if name == "list_files":
+            if not isinstance(args, dict) or set(args) != {"path"}:
+                raise ValueError("list_file expects exactly one argument: path")
+            return list_files(project, args["path"])
         raise ValueError(f"Unknown tool: {name}")
     except (ValueError, TypeError, OSError) as error:
         # The model receives errors too, so it can correct its request.
